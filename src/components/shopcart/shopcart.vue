@@ -11,7 +11,7 @@
               <div class="price">￥{{totalPrice}}</div>
               <div class="desc">另需配送费￥{{deliveryPrice}}元</div>
           </div>
-          <div class="content-right">
+          <div class="content-right" @click.stop.prevent="pay">
               <div class="pay" :class="payClass">{{ payDesc }}</div>
           </div>
       </div>
@@ -21,11 +21,11 @@
                 <h1 class="title">购物车</h1>
                 <span class="empty" @click="empty">清空</span>
             </div>
-            <div class="list-content">
+            <div class="list-content" ref="listContent">
                 <ul>
-                    <li class="food" v-for="food in selectFoods" :key="food.id">
+                    <li class="food border-1px" v-for="food in selectFoods" :key="food.id">
                         <span class="name">{{food.name}}</span>
-                        <div class="price">¥{{food.price}}*{{food.count}}</div>
+                        <div class="price">¥{{food.price * food.count}}</div>
                         <div class="cartcontrol-wrapper">
                             <cartcontrol :food="food"></cartcontrol>
                         </div>
@@ -34,10 +34,14 @@
             </div>
         </div>
     </transition>
+    <!-- <transition name="fade">
+        <div class="list-mask" v-show="listShow" @click="hideList"></div>
+    </transition> -->
   </div>
 </template>
 
 <script type='text/ecmascript-6'>
+    import BScroll from 'better-scroll'
     import cartcontrol from '../cartcontrol/cartcontrol.vue'
     export default {
         props: {
@@ -58,7 +62,8 @@
         },
         data () {
             return {
-                fold: true
+                fold: true,
+                scroll: {}
             }
         },
         computed: {
@@ -98,6 +103,17 @@
                     return false
                 }
                 let show = !this.fold
+                if (show) {
+                    this.$nextTick(() => {
+                        if (!this.scroll.scroll) {
+                            this.$set(this.scroll, 'scroll', new BScroll(this.$refs.listContent, {
+                                click: true
+                            }))
+                        } else {
+                            this.scroll.scroll.refresh()
+                        }
+                    })
+                }
                 return show
             }
         },
@@ -112,6 +128,15 @@
                 this.selectFoods.forEach((food) => {
                     food.count = 0
                 })
+            },
+            pay () {
+                if (this.totalPrice < this.minPrice) {
+                    return
+                }
+                window.alert(`支付${this.totalPrice}元`)
+            },
+            hideList () {
+                this.fold = true
             }
         },
         components: {
