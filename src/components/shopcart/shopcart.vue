@@ -1,6 +1,6 @@
 <template>
   <div class="shopcart">
-      <div class="content">
+      <div class="content" @click="toggleList">
           <div class="content-left" :class="{'highlight': totalCount > 0}">
               <div class="logo-wrapper">
                   <div class="logo">
@@ -15,10 +15,30 @@
               <div class="pay" :class="payClass">{{ payDesc }}</div>
           </div>
       </div>
+      <transition name="fold">
+        <div class="shopcart-list" v-show="listShow">
+            <div class="list-header">
+                <h1 class="title">购物车</h1>
+                <span class="empty" @click="empty">清空</span>
+            </div>
+            <div class="list-content">
+                <ul>
+                    <li class="food" v-for="food in selectFoods" :key="food.id">
+                        <span class="name">{{food.name}}</span>
+                        <div class="price">¥{{food.price}}*{{food.count}}</div>
+                        <div class="cartcontrol-wrapper">
+                            <cartcontrol :food="food"></cartcontrol>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </transition>
   </div>
 </template>
 
 <script type='text/ecmascript-6'>
+    import cartcontrol from '../cartcontrol/cartcontrol.vue'
     export default {
         props: {
             selectFoods: {
@@ -34,6 +54,11 @@
             minPrice: {
                 type: Number,
                 default: 0
+            }
+        },
+        data () {
+            return {
+                fold: true
             }
         },
         computed: {
@@ -67,7 +92,30 @@
                 } else {
                     return 'enough'
                 }
+            },
+            listShow () {
+                if (!this.totalCount) {
+                    return false
+                }
+                let show = !this.fold
+                return show
             }
+        },
+        methods: {
+            toggleList () {
+                if (!this.totalCount) {
+                    return
+                }
+                this.fold = !this.fold
+            },
+            empty () {
+                this.selectFoods.forEach((food) => {
+                    food.count = 0
+                })
+            }
+        },
+        components: {
+            cartcontrol
         }
     }
 </script>
