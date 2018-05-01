@@ -1,7 +1,7 @@
 <!--  -->
 <template>
   <div class="goods">
-      <div class="menu-wrapper">
+      <div class="menu-wrapper" ref="menuwrapper">
           <ul>
               <li v-for="(item, index) in goods" :key="item.id" class="menu-item"  :class="{'current': currentIndex === index}">
                   <span class="text border-1px">
@@ -10,7 +10,7 @@
               </li>
           </ul>
       </div>
-      <div class="foods-wrapper">
+      <div class="foods-wrapper" ref="foodswrapper">
           <ul>
               <li v-for="item in goods" :key="item.id" class="food-list food-list-hook">
                   <h1 class="title">{{ item.name }}</h1>
@@ -39,6 +39,7 @@
 </template>
 
 <script type='text/ecmascript-6'>
+import BScroll from 'better-scroll'
 const ERR_OK = 0
 
 export default {
@@ -49,18 +50,61 @@ export default {
     },
     data () {
         return {
-            goods: []
+            goods: [],
+            listHeight: [],
+            scrollY: 0
+        }
+    },
+    computed: {
+        currentIndex () {
+            for (let i = 0; i < this.listHeight.length; i++) {
+                let height1 = this.listHeight[i]
+                let height2 = this.listHeight[i + 1]
+                if (!height2 || (this.scrollY >= height1 && this.scrollY < height2)) {
+                    return i
+                }
+            }
+            return 0
         }
     },
     created () {
         this.$http.get('/api/goods').then(response => {
             if (response.data.errno === ERR_OK) {
                 this.goods = response.data.data
+                this.$nextTick(() => {
+                    this._initScroll()
+                    this._calculateHeight()
+                })
             }
             }, response => {
                 // error callback
             })
         this.classMap = ['decrease', 'discount', 'special', 'invoice', 'guarantee']
+    },
+    methods: {
+        _initScroll () {
+            this.menuScroll = new BScroll(this.$refs.menuwrapper, {
+                    click: true
+            })
+            this.foodsScroll = new BScroll(this.$refs.foodswrapper, {
+                click: true,
+                probeType: 3
+            })
+
+            this.foodsScroll.on('scroll', (pos) => {
+                this.scrollY = Math.abs(Math.round(pos.y))
+            })
+        },
+        _calculateHeight () {
+            let foodList = this.$refs.foodswrapper.getElementsByClassName('food-list-hook')
+            let height = 0
+            this.listHeight.push(height)
+            for (let i = 0; i < foodList.length; i++) {
+                let item = foodList[i]
+                height += item.clientHeight
+                this.listHeight.push(height)
+            }
+        }
     }
 }
 
