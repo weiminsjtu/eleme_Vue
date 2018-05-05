@@ -96,9 +96,7 @@ export default {
                     this._calculateHeight()
                 })
             }
-            }, response => {
-                // error callback
-            })
+        })
         this.classMap = ['decrease', 'discount', 'special', 'invoice', 'guarantee']
     },
     methods: {
